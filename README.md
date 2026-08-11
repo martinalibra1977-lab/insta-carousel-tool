@@ -27,6 +27,16 @@ npm run build    # Produktions-Build nach dist/
 npm run lint      # oxlint
 ```
 
+## Deployment (GitHub Pages)
+
+Bei jedem Push auf `main` baut ein GitHub-Actions-Workflow (`.github/workflows/deploy.yml`) die App und veröffentlicht sie automatisch unter:
+
+**https://martinalibra1977-lab.github.io/insta-carousel-tool/**
+
+Diese URL bleibt fest und ist auch vom Handy aus erreichbar — kein Server, kein eigenes Hosting nötig.
+
+Einmalig muss in den Repo-Einstellungen unter **Settings → Pages** als Quelle **„GitHub Actions“** ausgewählt werden, danach läuft alles automatisch bei jedem Merge nach `main`.
+
 ## Tech-Stack
 
 - React 19 + TypeScript + Vite
