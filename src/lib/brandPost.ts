@@ -5,6 +5,7 @@ import { getEditDims, type AspectId } from './aspect';
 export const BRAND = {
   navy: '#152B4E',
   pink: '#E5127D',
+  gold: '#B8912F',
   cream: '#F7F1E7',
   headlineFont: '"Playfair Display", serif',
   bodyFont: 'Poppins, sans-serif',
@@ -14,24 +15,27 @@ export interface BrandedPostInput {
   photoDataUrl: string;
   headline: string;
   headlineHighlights: string[];
+  headlineGoldHighlights?: string[];
   body: string;
   bodyHighlights: string[];
+  bodyGoldHighlights?: string[];
 }
 
 function styleRunsForHighlights(
   text: string,
-  highlights: string[],
   baseColor: string,
-  highlightColor: string,
+  colorGroups: Array<{ highlights: string[]; color: string }>,
 ): Record<number, Record<number, { fill: string }>> {
   const line: Record<number, { fill: string }> = {};
   for (let i = 0; i < text.length; i++) line[i] = { fill: baseColor };
-  for (const h of highlights) {
-    if (!h) continue;
-    let idx = text.indexOf(h);
-    while (idx !== -1) {
-      for (let i = idx; i < idx + h.length; i++) line[i] = { fill: highlightColor };
-      idx = text.indexOf(h, idx + h.length);
+  for (const group of colorGroups) {
+    for (const h of group.highlights) {
+      if (!h) continue;
+      let idx = text.indexOf(h);
+      while (idx !== -1) {
+        for (let i = idx; i < idx + h.length; i++) line[i] = { fill: group.color };
+        idx = text.indexOf(h, idx + h.length);
+      }
     }
   }
   return { 0: line };
@@ -103,7 +107,10 @@ export async function renderBrandedSlide(
     fontSize: Math.round(cw * 0.062),
     lineHeight: 1.15,
     fill: BRAND.navy,
-    styles: styleRunsForHighlights(input.headline, input.headlineHighlights, BRAND.navy, BRAND.pink),
+    styles: styleRunsForHighlights(input.headline, BRAND.navy, [
+      { highlights: input.headlineHighlights, color: BRAND.pink },
+      { highlights: input.headlineGoldHighlights ?? [], color: BRAND.gold },
+    ]),
   });
   fc.add(headline);
 
@@ -133,7 +140,10 @@ export async function renderBrandedSlide(
     fontSize: Math.round(cw * 0.032),
     lineHeight: 1.35,
     fill: BRAND.navy,
-    styles: styleRunsForHighlights(input.body, input.bodyHighlights, BRAND.navy, BRAND.pink),
+    styles: styleRunsForHighlights(input.body, BRAND.navy, [
+      { highlights: input.bodyHighlights, color: BRAND.pink },
+      { highlights: input.bodyGoldHighlights ?? [], color: BRAND.gold },
+    ]),
   });
   fc.add(body);
 

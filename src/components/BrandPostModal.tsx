@@ -26,10 +26,12 @@ export default function BrandPostModal({ onClose }: { onClose: () => void }) {
   const [photoName, setPhotoName] = useState<string | null>(null);
   const [headline, setHeadline] = useState('Manche Beziehungsmuster fühlen sich vertraut an — obwohl sie dir nicht guttun.');
   const [headlineHighlight, setHeadlineHighlight] = useState('obwohl sie dir nicht guttun.');
+  const [headlineGoldHighlight, setHeadlineGoldHighlight] = useState('');
   const [body, setBody] = useState(
     'Du wiederholst nicht, wer du bist. Du wiederholst oft nur, was du gelernt hast. Und genau das darf sich verändern.',
   );
   const [bodyHighlight, setBodyHighlight] = useState('gelernt hast, verändern');
+  const [bodyGoldHighlight, setBodyGoldHighlight] = useState('');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,8 +53,10 @@ export default function BrandPostModal({ onClose }: { onClose: () => void }) {
         photoDataUrl,
         headline,
         headlineHighlights: splitHighlights(headlineHighlight),
+        headlineGoldHighlights: splitHighlights(headlineGoldHighlight),
         body,
         bodyHighlights: splitHighlights(bodyHighlight),
+        bodyGoldHighlights: splitHighlights(bodyGoldHighlight),
       });
       onClose();
     } catch {
@@ -100,6 +104,10 @@ export default function BrandPostModal({ onClose }: { onClose: () => void }) {
           <label>Davon in Pink hervorheben (kommagetrennt, muss exakt im Text vorkommen)</label>
           <input value={headlineHighlight} onChange={(e) => setHeadlineHighlight(e.target.value)} />
         </div>
+        <div className="brandpost-field">
+          <label>Davon in Gold hervorheben (kommagetrennt, optional)</label>
+          <input value={headlineGoldHighlight} onChange={(e) => setHeadlineGoldHighlight(e.target.value)} />
+        </div>
 
         <div className="brandpost-field">
           <label>Fließtext</label>
@@ -108,6 +116,10 @@ export default function BrandPostModal({ onClose }: { onClose: () => void }) {
         <div className="brandpost-field">
           <label>Davon in Pink hervorheben (kommagetrennt)</label>
           <input value={bodyHighlight} onChange={(e) => setBodyHighlight(e.target.value)} />
+        </div>
+        <div className="brandpost-field">
+          <label>Davon in Gold hervorheben (kommagetrennt, optional)</label>
+          <input value={bodyGoldHighlight} onChange={(e) => setBodyGoldHighlight(e.target.value)} />
         </div>
 
         {error && <p className="brandpost-error">{error}</p>}
