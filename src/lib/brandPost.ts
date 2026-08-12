@@ -1,4 +1,4 @@
-import { StaticCanvas, FabricImage, Textbox, Rect, loadSVGFromString, util, type Group } from 'fabric';
+import { StaticCanvas, FabricImage, Textbox, loadSVGFromString, util, type Group } from 'fabric';
 import { getEditDims, type AspectId } from './aspect';
 
 // Martina Libra brand tokens — see claude code/context/brand-voice.md
@@ -62,7 +62,22 @@ export async function renderBrandedSlide(
   const { width: cw, height: ch } = getEditDims(aspect);
   const fc = new StaticCanvas(undefined, { width: cw, height: ch, backgroundColor: BRAND.cream });
 
-  // Logo: top-center.
+  // Photo: full-bleed background covering the entire slide.
+  const photoImg = await FabricImage.fromURL(input.photoDataUrl);
+  const iw = photoImg.width ?? cw;
+  const ih = photoImg.height ?? ch;
+  const scale = Math.max(cw / iw, ch / ih);
+  photoImg.set({
+    originX: 'left',
+    originY: 'top',
+    left: (cw - iw * scale) / 2,
+    top: (ch - ih * scale) / 2,
+    scaleX: scale,
+    scaleY: scale,
+  });
+  fc.add(photoImg);
+
+  // Logo: top-center, over the photo.
   const logo = await FabricImage.fromURL(logoUrl, { crossOrigin: 'anonymous' });
   const logoW = cw * 0.34;
   const logoScale = logoW / (logo.width ?? logoW);
@@ -75,35 +90,6 @@ export async function renderBrandedSlide(
     scaleY: logoScale,
   });
   fc.add(logo);
-
-  // Photo: right-side vertical strip, flush with the right and bottom edges (no
-  // border/margin), cropped to cover.
-  const photoImg = await FabricImage.fromURL(input.photoDataUrl);
-  const boxY = ch * 0.16;
-  const boxX = cw * 0.5;
-  const boxW = cw - boxX;
-  const boxH = ch - boxY;
-  const iw = photoImg.width ?? boxW;
-  const ih = photoImg.height ?? boxH;
-  const scale = Math.max(boxW / iw, boxH / ih);
-  photoImg.set({
-    originX: 'left',
-    originY: 'top',
-    left: boxX + (boxW - iw * scale) / 2,
-    top: boxY + (boxH - ih * scale) / 2,
-    scaleX: scale,
-    scaleY: scale,
-  });
-  photoImg.clipPath = new Rect({
-    left: boxX,
-    top: boxY,
-    width: boxW,
-    height: boxH,
-    originX: 'left',
-    originY: 'top',
-    absolutePositioned: true,
-  });
-  fc.add(photoImg);
 
   // Headline: serif, left column, navy with pink emphasis.
   const headlineWidth = cw * 0.42;
