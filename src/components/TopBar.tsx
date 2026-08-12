@@ -6,7 +6,7 @@ import { useDismiss } from '../lib/useDismiss';
 import type { ProjectFile } from '../types';
 import './TopBar.css';
 
-export default function TopBar({ onPreview }: { onPreview: () => void }) {
+export default function TopBar({ onPreview, onBrandPost }: { onPreview: () => void; onBrandPost: () => void }) {
   const projectName = useEditorStore((s) => s.projectName);
   const setProjectName = useEditorStore((s) => s.setProjectName);
   const aspect = useEditorStore((s) => s.aspect);
@@ -115,6 +115,9 @@ export default function TopBar({ onPreview }: { onPreview: () => void }) {
       </div>
 
       <div className="topbar-right">
+        <button className="btn" onClick={onBrandPost}>
+          ✨ Marken-Post
+        </button>
         <button className="btn" onClick={onPreview}>
           👁 Vorschau
         </button>

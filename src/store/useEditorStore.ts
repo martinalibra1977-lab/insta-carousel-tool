@@ -42,7 +42,7 @@ interface EditorState {
   saveError: boolean;
 
   setProjectName: (name: string) => void;
-  addSlide: () => void;
+  addSlide: () => string;
   duplicateSlide: (id: string) => void;
   removeSlide: (id: string) => void;
   reorderSlides: (fromIndex: number, toIndex: number) => void;
@@ -70,6 +70,7 @@ export const useEditorStore = create<EditorState>()(
       addSlide: () => {
         const slide = emptySlide();
         set((state) => ({ slides: [...state.slides, slide], activeSlideId: slide.id }));
+        return slide.id;
       },
 
       duplicateSlide: (id) => {

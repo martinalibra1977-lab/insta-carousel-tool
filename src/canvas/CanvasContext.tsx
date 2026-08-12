@@ -12,6 +12,7 @@ import {
 import { Canvas, IText, Rect, Circle, Line, FabricImage, Gradient, type FabricObject } from 'fabric';
 import { useEditorStore } from '../store/useEditorStore';
 import { getEditDims } from '../lib/aspect';
+import { renderBrandedSlide, type BrandedPostInput } from '../lib/brandPost';
 
 export type ShapeKind = 'rect' | 'circle' | 'line';
 
@@ -37,6 +38,7 @@ interface CanvasContextValue {
   sendToBack: () => void;
   updateSelected: (props: Record<string, unknown>) => void;
   scheduleSave: () => void;
+  generateBrandPost: (input: BrandedPostInput) => Promise<void>;
 }
 
 const CanvasContext = createContext<CanvasContextValue | null>(null);
@@ -427,6 +429,14 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     [bumpSelected, scheduleSave],
   );
 
+  const generateBrandPost = useCallback(async (input: BrandedPostInput) => {
+    const logoUrl = `${import.meta.env.BASE_URL}brand/logo.png`;
+    const aspect = useEditorStore.getState().aspect;
+    const { json, thumbnail } = await renderBrandedSlide(input, aspect, logoUrl);
+    const newId = useEditorStore.getState().addSlide();
+    useEditorStore.getState().updateSlide(newId, { json, thumbnail });
+  }, []);
+
   const value = useMemo<CanvasContextValue>(
     () => ({
       canvasElRef,
@@ -450,6 +460,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
       sendToBack,
       updateSelected,
       scheduleSave,
+      generateBrandPost,
     }),
     [
       canvas,
@@ -472,6 +483,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
       sendToBack,
       updateSelected,
       scheduleSave,
+      generateBrandPost,
     ],
   );
 

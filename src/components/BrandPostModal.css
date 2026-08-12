@@ -1,0 +1,87 @@
+.brandpost-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 7, 11, 0.82);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.brandpost-modal {
+  position: relative;
+  width: 420px;
+  max-height: 86vh;
+  overflow-y: auto;
+  background: #fff;
+  color: #262626;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.brandpost-modal h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.brandpost-hint {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #6b6b6b;
+}
+
+.brandpost-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6b6b6b;
+}
+
+.brandpost-field {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brandpost-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a4a4a;
+}
+
+.brandpost-field textarea,
+.brandpost-field input[type='text'],
+.brandpost-field input:not([type]) {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.brandpost-photo-preview {
+  margin-top: 8px;
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.brandpost-error {
+  color: #c62828;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.brandpost-submit {
+  width: 100%;
+  justify-content: center;
+}
