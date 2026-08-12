@@ -43,9 +43,9 @@ function styleRunsForHighlights(
 
 const HEART_SVG = `
 <svg width="220" height="60" viewBox="0 0 220 60" xmlns="http://www.w3.org/2000/svg">
-  <path d="M6 32 C 60 8, 90 54, 110 30" stroke="${BRAND.pink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-  <path d="M110 30 C 130 54, 160 8, 214 32" stroke="${BRAND.pink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-  <path d="M110 20 C 106 11, 95 11, 95 21 C 95 30, 110 39, 110 39 C 110 39, 125 30, 125 21 C 125 11, 114 11, 110 20 Z" fill="${BRAND.pink}"/>
+  <path d="M6 32 C 60 8, 90 54, 110 30" stroke="${BRAND.gold}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M110 30 C 130 54, 160 8, 214 32" stroke="${BRAND.gold}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M110 20 C 106 11, 95 11, 95 21 C 95 30, 110 39, 110 39 C 110 39, 125 30, 125 21 C 125 11, 114 11, 110 20 Z" fill="${BRAND.gold}"/>
 </svg>`;
 
 async function loadHeartDivider(): Promise<Group> {
@@ -83,7 +83,7 @@ export async function renderBrandedSlide(
 
   // Logo: top-center, over the photo.
   const logo = await FabricImage.fromURL(logoUrl, { crossOrigin: 'anonymous' });
-  const logoW = cw * 0.34;
+  const logoW = cw * 0.26;
   const logoScale = logoW / (logo.width ?? logoW);
   logo.set({
     left: cw / 2,
