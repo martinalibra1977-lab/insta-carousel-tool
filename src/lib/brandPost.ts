@@ -62,12 +62,27 @@ export async function renderBrandedSlide(
   const { width: cw, height: ch } = getEditDims(aspect);
   const fc = new StaticCanvas(undefined, { width: cw, height: ch, backgroundColor: BRAND.cream });
 
-  // Photo: right-side vertical strip, cropped to cover.
+  // Logo: top-center.
+  const logo = await FabricImage.fromURL(logoUrl, { crossOrigin: 'anonymous' });
+  const logoW = cw * 0.34;
+  const logoScale = logoW / (logo.width ?? logoW);
+  logo.set({
+    left: cw / 2,
+    top: ch * 0.035,
+    originX: 'center',
+    originY: 'top',
+    scaleX: logoScale,
+    scaleY: logoScale,
+  });
+  fc.add(logo);
+
+  // Photo: right-side vertical strip, flush with the right and bottom edges (no
+  // border/margin), cropped to cover.
   const photoImg = await FabricImage.fromURL(input.photoDataUrl);
+  const boxY = ch * 0.16;
   const boxX = cw * 0.5;
-  const boxY = ch * 0.14;
-  const boxW = cw * 0.46;
-  const boxH = ch * 0.84;
+  const boxW = cw - boxX;
+  const boxH = ch - boxY;
   const iw = photoImg.width ?? boxW;
   const ih = photoImg.height ?? boxH;
   const scale = Math.max(boxW / iw, boxH / ih);
@@ -89,20 +104,6 @@ export async function renderBrandedSlide(
     absolutePositioned: true,
   });
   fc.add(photoImg);
-
-  // Logo: top-left.
-  const logo = await FabricImage.fromURL(logoUrl, { crossOrigin: 'anonymous' });
-  const logoW = cw * 0.34;
-  const logoScale = logoW / (logo.width ?? logoW);
-  logo.set({
-    left: cw * 0.06,
-    top: ch * 0.035,
-    originX: 'left',
-    originY: 'top',
-    scaleX: logoScale,
-    scaleY: logoScale,
-  });
-  fc.add(logo);
 
   // Headline: serif, left column, navy with pink emphasis.
   const headlineWidth = cw * 0.42;
