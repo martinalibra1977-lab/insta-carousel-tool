@@ -72,18 +72,18 @@ export async function renderBrandedSlide(
   const photoPanelX = textPanelWidth;
   const photoPanelWidth = cw - photoPanelX;
 
-  // Photo: pre-cropped (cover-fit) to the exact photo-panel size on an offscreen
-  // canvas, then placed unscaled. Cropping the pixels themselves — rather than
-  // using a Fabric clipPath — means the crop survives the JSON export/reload
-  // round-trip the app uses for full-resolution export.
+  // Photo: fit (never cropped) into the photo-panel size on an offscreen canvas,
+  // then placed unscaled. Using "contain" instead of "cover" guarantees faces and
+  // full-body shots are never cut off — any leftover space is padded with the
+  // brand cream so it blends into the canvas. Baking this into pixels (rather
+  // than a Fabric clipPath) means it survives the JSON export/reload round-trip
+  // the app uses for full-resolution export.
   const rawPhoto = await FabricImage.fromURL(input.photoDataUrl);
   const iw = rawPhoto.width ?? photoPanelWidth;
   const ih = rawPhoto.height ?? ch;
-  const cropScale = Math.max(photoPanelWidth / iw, ch / ih);
-  const srcCropW = photoPanelWidth / cropScale;
-  const srcCropH = ch / cropScale;
-  const srcCropX = (iw - srcCropW) / 2;
-  const srcCropY = (ih - srcCropH) / 2;
+  const fitScale = Math.min(photoPanelWidth / iw, ch / ih);
+  const drawnW = iw * fitScale;
+  const drawnH = ih * fitScale;
 
   const renderMultiplier = getExportMultiplier(aspect);
   const cropCanvas = document.createElement('canvas');
@@ -91,16 +91,18 @@ export async function renderBrandedSlide(
   cropCanvas.height = Math.round(ch * renderMultiplier);
   const ctx = cropCanvas.getContext('2d');
   if (!ctx) throw new Error('2D canvas context unavailable');
+  ctx.fillStyle = BRAND.cream;
+  ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
   ctx.drawImage(
     rawPhoto.getElement() as CanvasImageSource,
-    srcCropX,
-    srcCropY,
-    srcCropW,
-    srcCropH,
     0,
     0,
-    cropCanvas.width,
-    cropCanvas.height,
+    iw,
+    ih,
+    (cropCanvas.width - drawnW * renderMultiplier) / 2,
+    (cropCanvas.height - drawnH * renderMultiplier) / 2,
+    drawnW * renderMultiplier,
+    drawnH * renderMultiplier,
   );
   const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.92);
 
