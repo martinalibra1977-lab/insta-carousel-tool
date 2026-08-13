@@ -1,4 +1,4 @@
-import { StaticCanvas, FabricImage, Textbox, loadSVGFromString, util, type Group } from 'fabric';
+import { StaticCanvas, FabricImage, Textbox, Rect, loadSVGFromString, util, type Group } from 'fabric';
 import { getEditDims, type AspectId } from './aspect';
 
 // Martina Libra brand tokens — see claude code/context/brand-voice.md
@@ -54,8 +54,9 @@ async function loadHeartDivider(): Promise<Group> {
   return util.groupSVGElements(valid, options) as Group;
 }
 
-/** Renders a branded post (logo top-left, cropped photo right, serif headline +
- * heart divider + body text left) to an offscreen canvas and returns its JSON +
+/** Renders a branded post as a split layout: a dedicated text panel on the left
+ * (solid cream background, always readable) and the photo confined to its own
+ * panel on the right — text never sits on top of the photo. Returns the JSON +
  * thumbnail, ready to store as a new slide. Runs off the live editor canvas so it
  * can never race with the slide-switch effect that loads/clears it. */
 export async function renderBrandedSlide(
@@ -66,28 +67,42 @@ export async function renderBrandedSlide(
   const { width: cw, height: ch } = getEditDims(aspect);
   const fc = new StaticCanvas(undefined, { width: cw, height: ch, backgroundColor: BRAND.cream });
 
-  // Photo: full-bleed background covering the entire slide.
+  // Split the canvas into a text panel (left) and a photo panel (right).
+  const textPanelWidth = cw * 0.56;
+  const photoPanelX = textPanelWidth;
+  const photoPanelWidth = cw - photoPanelX;
+
+  // Photo: cover-fit, clipped to its own panel so it can never sit behind the text.
   const photoImg = await FabricImage.fromURL(input.photoDataUrl);
-  const iw = photoImg.width ?? cw;
+  const iw = photoImg.width ?? photoPanelWidth;
   const ih = photoImg.height ?? ch;
-  const scale = Math.max(cw / iw, ch / ih);
+  const scale = Math.max(photoPanelWidth / iw, ch / ih);
+  const scaledW = iw * scale;
+  const scaledH = ih * scale;
   photoImg.set({
     originX: 'left',
     originY: 'top',
-    left: (cw - iw * scale) / 2,
-    top: (ch - ih * scale) / 2,
+    left: photoPanelX + (photoPanelWidth - scaledW) / 2,
+    top: (ch - scaledH) / 2,
     scaleX: scale,
     scaleY: scale,
   });
+  photoImg.clipPath = new Rect({
+    left: photoPanelX,
+    top: 0,
+    width: photoPanelWidth,
+    height: ch,
+    absolutePositioned: true,
+  });
   fc.add(photoImg);
 
-  // Logo: top-center, over the photo.
+  // Logo: smaller, top of the text panel.
   const logo = await FabricImage.fromURL(logoUrl, { crossOrigin: 'anonymous' });
-  const logoW = cw * 0.26;
+  const logoW = textPanelWidth * 0.4;
   const logoScale = logoW / (logo.width ?? logoW);
   logo.set({
-    left: cw / 2,
-    top: ch * 0.035,
+    left: textPanelWidth / 2,
+    top: ch * 0.045,
     originX: 'center',
     originY: 'top',
     scaleX: logoScale,
@@ -95,16 +110,17 @@ export async function renderBrandedSlide(
   });
   fc.add(logo);
 
-  // Headline: serif, left column, navy with pink emphasis.
-  const headlineWidth = cw * 0.42;
+  // Headline: serif, fills the text panel, navy with pink/gold emphasis.
+  const textLeft = cw * 0.07;
+  const headlineWidth = textPanelWidth - textLeft - cw * 0.04;
   const headline = new Textbox(input.headline, {
-    left: cw * 0.06,
-    top: ch * 0.28,
+    left: textLeft,
+    top: ch * 0.26,
     width: headlineWidth,
     originX: 'left',
     originY: 'top',
     fontFamily: BRAND.headlineFont,
-    fontSize: Math.round(cw * 0.062),
+    fontSize: Math.round(cw * 0.068),
     lineHeight: 1.15,
     fill: BRAND.navy,
     styles: styleRunsForHighlights(input.headline, BRAND.navy, [
@@ -117,9 +133,9 @@ export async function renderBrandedSlide(
   // Heart-swirl divider, positioned under the (already-wrapped) headline.
   const heart = await loadHeartDivider();
   const headlineBottom = (headline.top ?? 0) + headline.height * headline.scaleY;
-  const heartScale = (headlineWidth * 0.45) / (heart.width || 1);
+  const heartScale = (headlineWidth * 0.5) / (heart.width || 1);
   heart.set({
-    left: cw * 0.06,
+    left: textLeft,
     top: headlineBottom + ch * 0.03,
     originX: 'left',
     originY: 'top',
@@ -131,13 +147,13 @@ export async function renderBrandedSlide(
   // Body text below the divider.
   const bodyTop = (heart.top ?? 0) + heart.height * heart.scaleY + ch * 0.035;
   const body = new Textbox(input.body, {
-    left: cw * 0.06,
+    left: textLeft,
     top: bodyTop,
     width: headlineWidth,
     originX: 'left',
     originY: 'top',
     fontFamily: BRAND.bodyFont,
-    fontSize: Math.round(cw * 0.032),
+    fontSize: Math.round(cw * 0.036),
     lineHeight: 1.35,
     fill: BRAND.navy,
     styles: styleRunsForHighlights(input.body, BRAND.navy, [
