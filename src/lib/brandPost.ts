@@ -1,5 +1,5 @@
-import { StaticCanvas, FabricImage, Textbox, Rect, loadSVGFromString, util, type Group } from 'fabric';
-import { getEditDims, type AspectId } from './aspect';
+import { StaticCanvas, FabricImage, Textbox, loadSVGFromString, util, type Group } from 'fabric';
+import { getEditDims, getExportMultiplier, type AspectId } from './aspect';
 
 // Martina Libra brand tokens — see claude code/context/brand-voice.md
 export const BRAND = {
@@ -72,27 +72,46 @@ export async function renderBrandedSlide(
   const photoPanelX = textPanelWidth;
   const photoPanelWidth = cw - photoPanelX;
 
-  // Photo: cover-fit, clipped to its own panel so it can never sit behind the text.
-  const photoImg = await FabricImage.fromURL(input.photoDataUrl);
-  const iw = photoImg.width ?? photoPanelWidth;
-  const ih = photoImg.height ?? ch;
-  const scale = Math.max(photoPanelWidth / iw, ch / ih);
-  const scaledW = iw * scale;
-  const scaledH = ih * scale;
+  // Photo: pre-cropped (cover-fit) to the exact photo-panel size on an offscreen
+  // canvas, then placed unscaled. Cropping the pixels themselves — rather than
+  // using a Fabric clipPath — means the crop survives the JSON export/reload
+  // round-trip the app uses for full-resolution export.
+  const rawPhoto = await FabricImage.fromURL(input.photoDataUrl);
+  const iw = rawPhoto.width ?? photoPanelWidth;
+  const ih = rawPhoto.height ?? ch;
+  const cropScale = Math.max(photoPanelWidth / iw, ch / ih);
+  const srcCropW = photoPanelWidth / cropScale;
+  const srcCropH = ch / cropScale;
+  const srcCropX = (iw - srcCropW) / 2;
+  const srcCropY = (ih - srcCropH) / 2;
+
+  const renderMultiplier = getExportMultiplier(aspect);
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = Math.round(photoPanelWidth * renderMultiplier);
+  cropCanvas.height = Math.round(ch * renderMultiplier);
+  const ctx = cropCanvas.getContext('2d');
+  if (!ctx) throw new Error('2D canvas context unavailable');
+  ctx.drawImage(
+    rawPhoto.getElement() as CanvasImageSource,
+    srcCropX,
+    srcCropY,
+    srcCropW,
+    srcCropH,
+    0,
+    0,
+    cropCanvas.width,
+    cropCanvas.height,
+  );
+  const croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.92);
+
+  const photoImg = await FabricImage.fromURL(croppedDataUrl);
   photoImg.set({
     originX: 'left',
     originY: 'top',
-    left: photoPanelX + (photoPanelWidth - scaledW) / 2,
-    top: (ch - scaledH) / 2,
-    scaleX: scale,
-    scaleY: scale,
-  });
-  photoImg.clipPath = new Rect({
     left: photoPanelX,
     top: 0,
-    width: photoPanelWidth,
-    height: ch,
-    absolutePositioned: true,
+    scaleX: photoPanelWidth / cropCanvas.width,
+    scaleY: ch / cropCanvas.height,
   });
   fc.add(photoImg);
 
